@@ -3,7 +3,7 @@ pragma solidity >=0.4.22 <0.9.0;
 
 // @creator: HAGIA
 // @title: Hagia Curations
-// @author: @devbhang - bhang
+// @author: @devbhang - devbhang.eth
 // @author: @hazelrah_nft - hazelrah.eth
 
 import "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155URIStorage.sol";
