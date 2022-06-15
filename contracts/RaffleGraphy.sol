@@ -22,6 +22,7 @@ contract RaffleGraphy is ERC721AQueryable, Ownable, ERC2981 {
 	enum SaleStatus {
 		NoSale,
 		PrivateSale,
+		PreSale,
 		PublicSale,
 		SaleFinished
 	}
@@ -30,8 +31,8 @@ contract RaffleGraphy is ERC721AQueryable, Ownable, ERC2981 {
 	
 	string public baseURI;
 	
-	uint256 public constant MAX_MINT_PRIVATE = 51;
-	uint256 public constant MAX_MINT_PUBLIC = 21;
+	uint256 public constant MAX_MINT_PRIVATE = 21;
+	uint256 public constant MAX_MINT_PUBLIC = 11;
 	
 	uint256 public price = 0.1 ether;
 	
@@ -40,6 +41,8 @@ contract RaffleGraphy is ERC721AQueryable, Ownable, ERC2981 {
 	address public treasuryAddress;
 	
 	bytes32 private _merkleRoot;
+	
+	mapping(address => uint256) private _addressMintCount;
 	
 	constructor() ERC721A("RaffleGraphy", "RFLGPHY") {}
 	
@@ -52,6 +55,8 @@ contract RaffleGraphy is ERC721AQueryable, Ownable, ERC2981 {
 	}
 	
 	function editCreators(uint _index, address _creator) external onlyOwner {
+		require(_index < creators.length, "WRONG INDEX");
+		
 		creators[_index] = _creator;
 	}
 	
@@ -82,8 +87,6 @@ contract RaffleGraphy is ERC721AQueryable, Ownable, ERC2981 {
 		return super.supportsInterface(interfaceId);
 	}
 	
-	// SALE
-	
 	function getSaleStatus() public view returns (SaleStatus) {
 		return saleStatus;
 	}
@@ -93,24 +96,26 @@ contract RaffleGraphy is ERC721AQueryable, Ownable, ERC2981 {
 		_merkleRoot = _root;
 	}
 	
-	function _claimToken(uint _amount, uint _maxMint) internal virtual {
+	function _claimToken(uint256 _amount, uint256 _maxMint) internal virtual {
 		require(tx.origin == msg.sender, "ONLY HUMANS ALLOWED");
-		require(_amount < _maxMint, "MAX MINT PER TX IS EXCEEDED");
-		require(_numberMinted(msg.sender) + _amount < MAX_MINT_PRIVATE, "MAX MINT PER WALLET IS EXCEEDED");
+		require(_addressMintCount[msg.sender] + _amount < _maxMint, "MAX MINT PER WALLET IS EXCEEDED");
 		require(totalSupply() + _amount < maxSupply, "MAX SUPPLY IS EXCEEDED");
 		require(msg.value >= price * _amount, "NOT ENOUGH ETHERS SEND");
 		
 		_mint(msg.sender, _amount);
+		_addressMintCount[msg.sender] += _amount;
 	}
 	
-	function claimTokenPrivate(uint _amount, bytes32[] calldata _merkleProof) external payable {
-		require(saleStatus == SaleStatus.PrivateSale, "PRIVATE SALE IS NOT OPEN");
+	function claimTokenPrivate(uint256 _amount, bytes32[] calldata _merkleProof) external payable {
+		require(saleStatus == SaleStatus.PrivateSale || saleStatus == SaleStatus.PreSale, "SALE IS NOT OPEN");
 		require(MerkleProof.verify(_merkleProof, _merkleRoot, keccak256(abi.encodePacked(msg.sender))), "ADDRESS NOT WHITELISTED");
 		
-		_claimToken(_amount, MAX_MINT_PRIVATE);
+		uint256 _maxMint = saleStatus == SaleStatus.PrivateSale ? MAX_MINT_PRIVATE : MAX_MINT_PUBLIC;
+		
+		_claimToken(_amount, _maxMint);
 	}
 	
-	function claimTokenPublic(uint _amount) external payable {
+	function claimTokenPublic(uint256 _amount) external payable {
 		require(saleStatus == SaleStatus.PublicSale, "PUBLIC SALE IS NOT OPEN");
 		
 		_claimToken(_amount, MAX_MINT_PUBLIC);

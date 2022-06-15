@@ -1429,7 +1429,7 @@
   },
   "networks": {},
   "schemaVersion": "3.4.7",
-  "updatedAt": "2022-06-12T14:42:23.113Z",
+  "updatedAt": "2022-06-15T21:42:25.684Z",
   "devdoc": {
     "details": "ERC1155 token with storage based token URI management. Inspired by the ERC721URIStorage extension _Available since v4.6._",
     "kind": "dev",
