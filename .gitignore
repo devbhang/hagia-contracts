@@ -8,6 +8,8 @@
 
 # Local History for Visual Studio Code
 .history/
+artifacts/
+cache/
 
 ### JetBrains template
 
@@ -102,7 +104,6 @@ build/Release
 **/node_modules/*
 !**/node_modules/erc721a
 jspm_packages/
-test/
 
 # Snowpack dependency directory (https://snowpack.dev/)
 web_modules/
